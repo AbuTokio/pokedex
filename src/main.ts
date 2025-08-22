@@ -1,16 +1,18 @@
 import { TYPE_COLORS } from "./constants/TypeColors"
 import { Element } from "./enums/Element"
 import { PokemonType } from "./enums/PokemonType"
-import { createButton, displayPokemon, getPokemon } from "./utils/data"
+import { createButton, createLoader, displayPokemon, getPokemon } from "./utils/data"
 import "./styles/main.scss"
 import type { Pokemon } from "./interfaces/Pokemon"
 
 const TYPES: PokemonType[] = Object.values(PokemonType)
 
 const html = {
+  header: document.querySelector("header") as HTMLDivElement,
   searchInput: document.querySelector("#search-input") as HTMLInputElement,
   buttons: {
     typeButtons: [document.querySelector("#type-buttons"), {}] as [HTMLDivElement, Record<string, HTMLButtonElement>],
+    backToTop: document.querySelector("#back-to-top-button") as HTMLButtonElement,
   },
   main: [document.querySelector("main"), {}] as [HTMLDivElement, Record<string, HTMLButtonElement>],
 }
@@ -18,9 +20,46 @@ const html = {
 const pokemon: Pokemon[] = await getPokemon()
 
 function showAllPokemon(): void {
-  pokemon.forEach(async (pokemon) => {
-    html.main[Element.THIS].appendChild(await displayPokemon(pokemon))
-  })
+  html.main[Element.THIS].innerHTML = ""
+  html.main[Element.THIS].appendChild(createLoader())
+  setTimeout(() => {
+    html.main[Element.THIS].innerHTML = ""
+    pokemon.forEach(async (pokemon) => {
+      html.main[Element.THIS].appendChild(await displayPokemon(pokemon))
+    })
+  }, 750)
+}
+
+function showPokemonByType(type: PokemonType): void {
+  html.main[Element.THIS].innerHTML = ""
+  html.main[Element.THIS].appendChild(createLoader())
+  setTimeout(() => {
+    html.main[Element.THIS].innerHTML = ""
+    const filteredPokemonType1: Pokemon[] = pokemon.filter((pok) => {
+      return pok.types[0].type.name === type
+    })
+
+    const filteredPokemonType2: Pokemon[] = pokemon.filter((pok) => {
+      if (pok.types[1]) return pok.types[1].type.name === type
+    })
+
+    const filteredPokemon: Pokemon[] = [...filteredPokemonType1, ...filteredPokemonType2]
+
+    filteredPokemon.forEach(async (pokemon) => {
+      html.main[Element.THIS].appendChild(await displayPokemon(pokemon))
+    })
+
+    scrollToMain()
+  }, 750)
+}
+
+function scrollToMain(): void {
+  if (window.innerWidth < 768) {
+    html.main[Element.THIS].scrollIntoView({
+      behavior: "smooth",
+      block: "start",
+    })
+  }
 }
 
 function addButtons(): void {
@@ -28,10 +67,7 @@ function addButtons(): void {
   html.buttons.typeButtons[Element.CHILD]["all"] = btn
   html.buttons.typeButtons[Element.THIS].appendChild(btn)
   btn.addEventListener("click", () => {
-    html.main[Element.THIS].innerHTML = ""
-    pokemon.forEach(async (pokemon) => {
-      html.main[Element.THIS].appendChild(await displayPokemon(pokemon))
-    })
+    showAllPokemon()
   })
 
   TYPES.forEach((type: PokemonType) => {
@@ -39,21 +75,8 @@ function addButtons(): void {
     html.buttons.typeButtons[Element.CHILD][type] = typeButton
     html.buttons.typeButtons[Element.THIS].appendChild(typeButton)
 
-    typeButton.addEventListener("click", async () => {
-      html.main[Element.THIS].innerHTML = ""
-      const filteredPokemonType1: Pokemon[] = pokemon.filter((pok) => {
-        return pok.types[0].type.name === type
-      })
-
-      const filteredPokemonType2: Pokemon[] = pokemon.filter((pok) => {
-        if (pok.types[1]) return pok.types[1].type.name === type
-      })
-
-      const filteredPokemon: Pokemon[] = [...filteredPokemonType1, ...filteredPokemonType2]
-
-      filteredPokemon.forEach(async (pokemon) => {
-        html.main[Element.THIS].appendChild(await displayPokemon(pokemon))
-      })
+    typeButton.addEventListener("click", () => {
+      showPokemonByType(type)
     })
   })
 }
@@ -84,6 +107,23 @@ html.searchInput.addEventListener("keyup", () => {
     showAllPokemon()
   }
 })
+
+const observer = new IntersectionObserver(
+  (entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        html.buttons.backToTop.classList.add("visible")
+      } else {
+        html.buttons.backToTop.classList.remove("visible")
+      }
+    })
+  },
+  {
+    threshold: 0,
+  }
+)
+
+observer.observe(html.main[Element.THIS])
 
 addButtons()
 showAllPokemon()

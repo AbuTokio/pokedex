@@ -19,15 +19,12 @@ async function getData<T>(key: string, save: boolean = false): Promise<T> {
   const data: string | null = localStorage.getItem(key)
   if (data) {
     try {
-      console.log("Getting data from Local Storage...") // debug
       return JSON.parse(data) as T
     } catch (error) {
       console.error(error)
-      console.log("Getting data from API...") // debug
       return (await fetchData<T>(key, save)) as T
     }
   } else {
-    console.log("Getting data from API...") // debug
     return (await fetchData<T>(key, save)) as T
   }
 }
@@ -56,7 +53,7 @@ export async function displayPokemon(pokemon: Pokemon): Promise<HTMLDivElement> 
     <img src="${pokemon.sprites.other?.showdown.front_default}" alt="${pokemon.name}" />
     </div>
     <div class="pokemon-info">
-      <div class="pokemon-types">
+      <div class="pokemon-types-id">
         <p style="background-color: ${TYPE_COLORS[pokemon.types[0].type.name as PokemonType]}">${
     pokemon.types[0].type.name
   }</p>
@@ -68,11 +65,11 @@ export async function displayPokemon(pokemon: Pokemon): Promise<HTMLDivElement> 
               }</p>
         `
             : ``
-        }
+        } 
+            <p class="pokemon-id">${formatNumber(pokemon.id, 3)}</p>
       </div>
-      <div class="pokemon-name-id">
+      <div class="pokemon-name-wrapper">
         <p class="pokemon-name">${capitalizeString(pokemon.name)}</p>
-        <p class="pokemon-id">${formatNumber(pokemon.id, 3)}</p>
       </div>
     </div>
   </div>
@@ -93,4 +90,10 @@ export function createButton(name: string, color: string): HTMLButtonElement {
   btn.id = `${name}-btn`
   btn.style.backgroundColor = color
   return btn
+}
+
+export function createLoader(): HTMLDivElement {
+  const loader = document.createElement("div") as HTMLDivElement
+  loader.classList.add("loader")
+  return loader
 }
