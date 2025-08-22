@@ -4,6 +4,7 @@ import type { PokemonType } from "../enums/PokemonType"
 import type { Pokemon } from "../interfaces/Pokemon"
 import type { PokemonResponse } from "../interfaces/PokemonResponse"
 import { capitalizeString, formatNumber } from "./format"
+import { playPokemonCry } from "./sound"
 
 async function fetchData<T>(url: string, save: boolean = false): Promise<T> {
   const resp: Response = await fetch(url)
@@ -76,6 +77,13 @@ export async function displayPokemon(pokemon: Pokemon): Promise<HTMLDivElement> 
     </div>
   </div>
   `
+
+  pokemonCard.addEventListener("click", (e) => {
+    if (e.target === pokemonCard.querySelector("img")) {
+      playPokemonCry(pokemon.name)
+    }
+  })
+
   return pokemonCard
 }
 
