@@ -15,6 +15,7 @@ const html = {
 }
 
 const pokemon: Pokemon[] = await getPokemon()
+
 pokemon.forEach(async (pokemon) => {
   html.main.appendChild(await displayPokemon(pokemon))
 })
@@ -27,11 +28,11 @@ TYPES.forEach((type: PokemonType) => {
   typeButton.addEventListener("click", async () => {
     btn.style.display = "initial"
     html.main.innerHTML = ""
-    const filteredPokemon1: Pokemon[] = await pokemon.filter((pok) => {
+    const filteredPokemon1: Pokemon[] = pokemon.filter((pok) => {
       return pok.types[0].type.name === type
     })
 
-    const filteredPokemon2: Pokemon[] = await pokemon.filter((pok) => {
+    const filteredPokemon2: Pokemon[] = pokemon.filter((pok) => {
       if (pok.types[1]) return pok.types[1].type.name === type
     })
 

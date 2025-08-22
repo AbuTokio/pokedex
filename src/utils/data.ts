@@ -23,22 +23,25 @@ async function getData<T>(key: string, save: boolean = false): Promise<T> {
     } catch (error) {
       console.error(error)
       console.log("Getting data from API...") // debug
-      return fetchData<T>(key, save) as T
+      return (await fetchData<T>(key, save)) as T
     }
   } else {
     console.log("Getting data from API...") // debug
-    return fetchData<T>(key, save) as T
+    return (await fetchData<T>(key, save)) as T
   }
 }
 
 export async function getPokemon(): Promise<Pokemon[]> {
   const pokemonResult = await getData<PokemonResponse>(POKEMON_URL, true)
-  const pokemon: Pokemon[] = []
-  pokemonResult.results.forEach(async (result) => {
-    const { id, name, sprites, types } = await getData<Pokemon>(result.url)
-    pokemon.push({ id, name, sprites, types })
-    localStorage.setItem(result.url, JSON.stringify({ id, name, sprites, types }))
-  })
+  const pokemon: Pokemon[] = await Promise.all(
+    pokemonResult.results.map(async (result) => {
+      const { id, name, sprites, types } = await getData<Pokemon>(result.url)
+      const data = { id, name, sprites, types }
+
+      localStorage.setItem(result.url, JSON.stringify(data))
+      return data
+    })
+  )
   return pokemon
 }
 
